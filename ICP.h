@@ -198,27 +198,17 @@ namespace RigidMotionEstimator {
 ///////////////////////////////////////////////////////////////////////////////
 /// ICP implementation using ADMM/ALM/Penalty method
 namespace SICP {
-    class Parameters {
-    public:
-        Parameters() : use_penalty(false),
-                       p(1.0),
-                       mu(10.0),
-                       alpha(1.2),
-                       max_mu(1e5),
-                       max_icp(100),
-                       max_outer(100),
-                       max_inner(1),
-                       stop(1e-5) {}
-        /// Parameters
-        bool use_penalty; /// if use_penalty then penalty method else ADMM or ALM (see max_inner)
-        double p;         /// p norm
-        double mu;        /// penalty weight
-        double alpha;     /// penalty increase factor
-        double max_mu;    /// max penalty
-        int max_icp;      /// max ICP iteration
-        int max_outer;    /// max outer iteration
-        int max_inner;    /// max inner iteration. If max_inner=1 then ADMM else ALM
-        double stop;      /// stopping criteria
+    struct Parameters {
+        bool use_penalty = false; /// if use_penalty then penalty method else ADMM or ALM (see max_inner)
+        double p = 1.0;           /// p norm
+        double mu = 10.0;         /// penalty weight
+        double alpha = 1.2;       /// penalty increase factor
+        double max_mu = 1e5;      /// max penalty
+        int max_icp = 100;        /// max ICP iteration
+        int max_outer = 100;      /// max outer iteration
+        int max_inner = 1;        /// max inner iteration. If max_inner=1 then ADMM else ALM
+        double stop = 1e-5;       /// stopping criteria
+        bool print_icpn = false;  /// (debug) print ICP iteration 
     };
     /// Shrinkage operator (Automatic loop unrolling using template)
     template<unsigned int I>
@@ -271,6 +261,7 @@ namespace SICP {
         Eigen::Matrix3Xd Xo2 = X;
         /// ICP
         for(int icp=0; icp<par.max_icp; ++icp) {
+            if(par.print_icpn) std::cout << "Iteration #" << icp << "/" << par.max_icp << std::endl;
             /// Find closest point
             #pragma omp parallel for
             for(int i=0; i<X.cols(); ++i) {
@@ -328,6 +319,8 @@ namespace SICP {
         Eigen::Matrix3Xd Xo2 = X;
         /// ICP
         for(int icp=0; icp<par.max_icp; ++icp) {
+            if(par.print_icpn) std::cout << "Iteration #" << icp << "/" << par.max_icp << std::endl;
+            
             /// Find closest point
             #pragma omp parallel for
             for(int i=0; i<X.cols(); ++i) {
@@ -465,12 +458,11 @@ namespace ICP {
     /// @param Source (one 3D point per column)
     /// @param Target (one 3D point per column)
     /// @param Parameters
-    template <typename Derived1, typename Derived2>
-    void point_to_point(Eigen::MatrixBase<Derived1>& X,
-                        Eigen::MatrixBase<Derived2>& Y,
+    void point_to_point(Eigen::Matrix3Xd& X,
+                        Eigen::Matrix3Xd& Y,
                         Parameters par = Parameters()) {
         /// Build kd-tree
-        nanoflann::KDTreeAdaptor<Eigen::MatrixBase<Derived2>, 3, nanoflann::metric_L2_Simple> kdtree(Y);
+        nanoflann::KDTreeAdaptor<Eigen::Matrix3Xd, 3, nanoflann::metric_L2_Simple> kdtree(Y);
         /// Buffers
         Eigen::Matrix3Xd Q = Eigen::Matrix3Xd::Zero(3, X.cols());
         Eigen::VectorXd W = Eigen::VectorXd::Zero(X.cols());
