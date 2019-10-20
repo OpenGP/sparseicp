@@ -18,6 +18,7 @@
 #define ICP_H
 #include <nanoflann.hpp>
 #include <Eigen/Dense>
+#include <iostream>
 ///////////////////////////////////////////////////////////////////////////////
 namespace nanoflann {
     /// KD-tree adaptor for working with data directly stored in an Eigen Matrix, without duplicating the data storage.
