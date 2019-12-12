@@ -32,7 +32,7 @@ namespace nanoflann {
         index_t* index;
         KDTreeAdaptor(const MatrixType &mat, const int leaf_max_size = 10) : m_data_matrix(mat) {
             const size_t dims = mat.rows();
-            index = new index_t( dims, *this, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_max_size, dims ) );
+            index = new index_t( dims, *this, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_max_size) );
             index->buildIndex();
         }
         ~KDTreeAdaptor() {delete index;}
