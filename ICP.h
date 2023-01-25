@@ -107,7 +107,11 @@ namespace RigidMotionEstimator {
         X.colwise() += X_mean;
         Y.colwise() += Y_mean;
         /// Return transformation
-        return transformation;
+        Eigen::Affine3d trans = Eigen::Affine3d::Identity();
+        trans.translation() = - X_mean;
+        Eigen::Affine3d trans2 = Eigen::Affine3d::Identity();
+        trans2.translation() = X_mean;
+        return trans2 * transformation * trans;
     }
     /// @param Source (one 3D point per column)
     /// @param Target (one 3D point per column)
