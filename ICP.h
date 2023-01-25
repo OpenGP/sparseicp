@@ -253,7 +253,7 @@ namespace SICP {
     /// @param Target (one 3D point per column)
     /// @param Parameters
     template <typename Derived1, typename Derived2>
-    void point_to_point(Eigen::MatrixBase<Derived1>& X,
+    Eigen::Affine3d point_to_point(Eigen::MatrixBase<Derived1>& X,
                         Eigen::MatrixBase<Derived2>& Y,
                         Parameters par = Parameters()) {
         /// Build kd-tree
@@ -264,6 +264,7 @@ namespace SICP {
         Eigen::Matrix3Xd C = Eigen::Matrix3Xd::Zero(3, X.cols());
         Eigen::Matrix3Xd Xo1 = X;
         Eigen::Matrix3Xd Xo2 = X;
+        Eigen::Affine3d accumulated = Eigen::Affine3d::Identity();
         /// ICP
         for(int icp=0; icp<par.max_icp; ++icp) {
             if(par.print_icpn) std::cout << "Iteration #" << icp << "/" << par.max_icp << std::endl;
@@ -282,7 +283,8 @@ namespace SICP {
                     shrink<3>(Z, mu, par.p);
                     /// Rotation and translation update
                     Eigen::Matrix3Xd U = Q+Z-C/mu;
-                    RigidMotionEstimator::point_to_point(X, U);
+                    Eigen::Affine3d current = RigidMotionEstimator::point_to_point(X, U);
+                    accumulated = current*accumulated;
                     /// Stopping criteria
                     dual = (X-Xo1).colwise().norm().maxCoeff();
                     Xo1 = X;
@@ -302,6 +304,7 @@ namespace SICP {
             Xo2 = X;
             if(stop < par.stop) break;
         }
+        return accumulated;
     }
     /// Sparse ICP with point to plane
     /// @param Source (one 3D point per column)
